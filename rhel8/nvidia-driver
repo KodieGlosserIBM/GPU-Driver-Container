@@ -112,6 +112,12 @@ _install_prerequisites() (
     	dnf config-manager --set-disabled rhel-8-for-$DRIVER_ARCH-baseos-eus-rpms || true
     fi
 
+    # try without EUS, if it does not work, then try just major version
+    if ! dnf makecache --releasever=${DNF_RELEASEVER}; then
+      DNF_RELEASEVER=8 # should filter on kernel to get major or since this is for rhel8 only could hardcode it but probably best to future proof it.
+      dnf makecache --release=${DNF_RELEASEVER} > /dev/null # if this fails, then all attempts were tried and we can fail the container
+    fi
+
     echo "Installing Linux kernel headers..."
     dnf -q -y --releasever=${DNF_RELEASEVER} install kernel-headers-${KERNEL_VERSION} kernel-devel-${KERNEL_VERSION} > /dev/null
     ln -s /usr/src/kernels/${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build
